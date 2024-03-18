@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Trading Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #C0C0C0;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            background-color: #D4D0C8;
+            border: 2px outset #FFFFFF;
+            color: black;
+            padding: 4px 8px;
+        }
+        select {
+            background-color: #FFFFFF;
+            border: 2px inset #D4D0C8;
+            color: black;
+            padding: 2px 4px;
+        }
+        input {
+            background-color: #FFFFFF;
+            border: 2px inset #D4D0C8;
+            color: black;
+            padding: 2px 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-4 text-center">Cyberpunk Trading Game</h1>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <h2 class="text-xl font-bold mb-2">Current Location: <span id="location"></span></h2>
+                <div id="prices" class="mb-4"></div>
+                <select id="citySelect" class="mb-2"></select>
+                <button id="travel" class="mb-2">Travel</button>
+                <button id="nextDay">Next Day</button>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold mb-2">Inventory</h2>
+                <div id="inventory" class="mb-4"></div>
+                <p>Credits: <span id="credits"></span></p>
+            </div>
+        </div>
+        <div class="mt-8">
+            <h2 class="text-xl font-bold mb-2">Actions</h2>
+            <div class="flex space-x-4">
+                <input type="number" id="quantity" min="1" placeholder="Quantity">
+                <select id="item"></select>
+                <button id="buy">Buy</button>
+                <button id="sell">Sell</button>
+            </div>
+        </div>
+        <div id="eventMessage" class="mt-8"></div>
+    </div>
+
+    <script>
+        const locations = [
+            { name: "Neo Tokyo", prices: { "Microchips": 100, "Neural Implants": 500, "Holo-Disguises": 1000, "Quantum Drives": 750, "Bio-Augments": 1200, "Nano-Bots": 400, "Cyberdeck": 800, "Plasma Rifle": 1500, "Stealth Suit": 900, "Stimpacks": 200 } },
+            { name: "Cyber City", prices: { "Microchips": 120, "Neural Implants": 450, "Holo-Disguises": 1200, "Quantum Drives": 800, "Bio-Augments": 1100, "Nano-Bots": 450, "Cyberdeck": 850, "Plasma Rifle": 1400, "Stealth Suit": 950, "Stimpacks": 180 } },
+            { name: "Dystopia", prices: { "Microchips": 90, "Neural Implants": 550, "Holo-Disguises": 800, "Quantum Drives": 700, "Bio-Augments": 1300, "Nano-Bots": 350, "Cyberdeck": 750, "Plasma Rifle": 1600, "Stealth Suit": 850, "Stimpacks": 220 } },
+            { name: "Synthwave", prices: { "Microchips": 110, "Neural Implants": 480, "Holo-Disguises": 1100, "Quantum Drives": 780, "Bio-Augments": 1150, "Nano-Bots": 420, "Cyberdeck": 820, "Plasma Rifle": 1450, "Stealth Suit": 920, "Stimpacks": 190 } },
+            { name: "Neon Heights", prices: { "Microchips": 95, "Neural Implants": 520, "Holo-Disguises": 900, "Quantum Drives": 720, "Bio-Augments": 1250, "Nano-Bots": 380, "Cyberdeck": 780, "Plasma Rifle": 1550, "Stealth Suit": 880, "Stimpacks": 210 } }
+        ];
+
+        const events = [
+            { message: "A new shipment of goods has arrived in the city, prices have decreased by 10%.", effect: 0.9 },
+            { message: "A major corporation has bought out a supplier, prices have increased by 20%.", effect: 1.2 },
+            { message: "A city-wide festival is driving up demand, prices have increased by 15%.", effect: 1.15 },
+            { message: "A hacker group has disrupted supply chains, prices have increased by 25%.", effect: 1.25 },
+            { message: "The government has subsidized trade, prices have decreased by 5%.", effect: 0.95 }
+        ];
+
+        let currentLocation = 0;
+        let inventory = {};
+        let credits = 1000;
+        let currentDay = 1;
+
+        const locationElement = document.getElementById("location");
+        const pricesElement = document.getElementById("prices");
+        const inventoryElement = document.getElementById("inventory");
+        const creditsElement = document.getElementById("credits");
+        const citySelect = document.getElementById("citySelect");
+        const travelButton = document.getElementById("travel");
+        const nextDayButton = document.getElementById("nextDay");
+        const quantityInput = document.getElementById("quantity");
+        const itemSelect = document.getElementById("item");
+        const buyButton = document.getElementById("buy");
+        const sellButton = document.getElementById("sell");
+        const eventMessageElement = document.getElementById("eventMessage");
+
+        function updateDisplay() {
+            locationElement.textContent = locations[currentLocation].name;
+            pricesElement.innerHTML = Object.entries(locations[currentLocation].prices)
+                .map(([item, price]) => `<p>${item}: ${price} credits</p>`)
+                .join("");
+            inventoryElement.innerHTML = Object.entries(inventory)
+                .map(([item, quantity]) => `<p>${item}: ${quantity}</p>`)
+                .join("");
+            creditsElement.textContent = credits;
+            itemSelect.innerHTML = Object.keys(locations[currentLocation].prices)
+                .map(item => `<option value="${item}">${item}</option>`)
+                .join("");
+        }
+
+        function travel() {
+            const selectedCity = citySelect.value;
+            if (selectedCity) {
+                currentLocation = locations.findIndex(location => location.name === selectedCity);
+                currentDay++;
+                if (Math.random() < 0.2) {
+                    const event = events[Math.floor(Math.random() * events.length)];
+                    eventMessageElement.textContent = `Day ${currentDay}: ${event.message}`;
+                    Object.keys(locations[currentLocation].prices).forEach(item => {
+                        locations[currentLocation].prices[item] = Math.round(locations[currentLocation].prices[item] * event.effect);
+                    });
+                } else {
+                    eventMessageElement.textContent = `Day ${currentDay}: No significant events occurred.`;
+                }
+                updateDisplay();
+            }
+        }
+
+        function nextDay() {
+            currentDay++;
+            if (Math.random() < 0.2) {
+                const event = events[Math.floor(Math.random() * events.length)];
+                eventMessageElement.textContent = `Day ${currentDay}: ${event.message}`;
+                Object.keys(locations[currentLocation].prices).forEach(item => {
+                    locations[currentLocation].prices[item] = Math.round(locations[currentLocation].prices[item] * event.effect);
+                });
+            } else {
+                eventMessageElement.textContent = `Day ${currentDay}: No significant events occurred.`;
+            }
+            updateDisplay();
+        }
+
+        function buy() {
+            const item = itemSelect.value;
+            const quantity = parseInt(quantityInput.value);
+            if (item && quantity) {
+                const price = locations[currentLocation].prices[item] * quantity;
+                if (price <= credits) {
+                    credits -= price;
+                    inventory[item] = (inventory[item] || 0) + quantity;
+                    updateDisplay();
+                } else {
+                    alert("Insufficient credits!");
+                }
+            }
+        }
+
+        function sell() {
+            const item = itemSelect.value;
+            const quantity = parseInt(quantityInput.value);
+            if (item && quantity && inventory[item] >= quantity) {
+                const price = locations[currentLocation].prices[item] * quantity;
+                credits += price;
+                inventory[item] -= quantity;
+                if (inventory[item] === 0) {
+                    delete inventory[item];
+                }
+                updateDisplay();
+            }
+        }
+
+        citySelect.innerHTML = locations.map(location => `<option value="${location.name}">${location.name}</option>`).join("");
+
+        travelButton.addEventListener("click", travel);
+        nextDayButton.addEventListener("click", nextDay);
+        buyButton.addEventListener("click", buy);
+        sellButton.addEventListener("click", sell);
+
+        updateDisplay();
+    </script>
+</body>
+</html>
