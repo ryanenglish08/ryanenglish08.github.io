@@ -7,48 +7,63 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #C0C0C0;
-            font-family: Arial, sans-serif;
+            background-color: #0c0c0c;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
         }
         button {
-            background-color: #D4D0C8;
-            border: 2px outset #FFFFFF;
-            color: black;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
             padding: 4px 8px;
         }
+        button:active {
+            background-color: #0c0c0c;
+        }
         select {
-            background-color: #FFFFFF;
-            border: 2px inset #D4D0C8;
-            color: black;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
             padding: 2px 4px;
         }
         input {
-            background-color: #FFFFFF;
-            border: 2px inset #D4D0C8;
-            color: black;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
             padding: 2px 4px;
         }
     </style>
 </head>
 <body>
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-4 text-center">Cyberpunk Trading Game</h1>
+        <h1 class="text-4xl font-bold mb-4 text-center">Cyberpunk Trading Game</h1>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <h2 class="text-xl font-bold mb-2">Current Location: <span id="location"></span></h2>
+                <h2 class="text-2xl font-bold mb-2">Current Location: <span id="location"></span></h2>
                 <div id="prices" class="mb-4"></div>
                 <select id="citySelect" class="mb-2"></select>
                 <button id="travel" class="mb-2">Travel</button>
                 <button id="nextDay">Next Day</button>
             </div>
             <div>
-                <h2 class="text-xl font-bold mb-2">Inventory</h2>
+                <h2 class="text-2xl font-bold mb-2">Inventory</h2>
                 <div id="inventory" class="mb-4"></div>
                 <p>Credits: <span id="credits"></span></p>
+                <p>Time Remaining: <span id="timeRemaining"></span> days</p>
+                <p>Reputation: <span id="reputation"></span></p>
+                <p>Cargo Capacity: <span id="cargoCapacity"></span></p>
+                <div id="upgradePanel" class="mt-4">
+                    <h3 class="text-xl font-bold mb-2">Upgrades</h3>
+                    <button id="upgradeCapacity">Upgrade Cargo Capacity (+10)</button>
+                    <button id="upgradeNegotiation">Upgrade Negotiation Skills (+5% better prices)</button>
+                    <button id="upgradeStorage">Upgrade Storage (+20 cargo capacity)</button>
+                    <button id="upgradeShield">Upgrade Shield (Reduce theft chance by 10%)</button>
+                    <button id="upgradeSpeed">Upgrade Travel Speed (Reduce travel time by 1 day)</button>
+                </div>
             </div>
         </div>
         <div class="mt-8">
-            <h2 class="text-xl font-bold mb-2">Actions</h2>
+            <h2 class="text-2xl font-bold mb-2">Actions</h2>
             <div class="flex space-x-4">
                 <input type="number" id="quantity" min="1" placeholder="Quantity">
                 <select id="item"></select>
@@ -61,11 +76,16 @@
 
     <script>
         const locations = [
-            { name: "Neo Tokyo", prices: { "Microchips": 100, "Neural Implants": 500, "Holo-Disguises": 1000, "Quantum Drives": 750, "Bio-Augments": 1200, "Nano-Bots": 400, "Cyberdeck": 800, "Plasma Rifle": 1500, "Stealth Suit": 900, "Stimpacks": 200 } },
-            { name: "Cyber City", prices: { "Microchips": 120, "Neural Implants": 450, "Holo-Disguises": 1200, "Quantum Drives": 800, "Bio-Augments": 1100, "Nano-Bots": 450, "Cyberdeck": 850, "Plasma Rifle": 1400, "Stealth Suit": 950, "Stimpacks": 180 } },
-            { name: "Dystopia", prices: { "Microchips": 90, "Neural Implants": 550, "Holo-Disguises": 800, "Quantum Drives": 700, "Bio-Augments": 1300, "Nano-Bots": 350, "Cyberdeck": 750, "Plasma Rifle": 1600, "Stealth Suit": 850, "Stimpacks": 220 } },
-            { name: "Synthwave", prices: { "Microchips": 110, "Neural Implants": 480, "Holo-Disguises": 1100, "Quantum Drives": 780, "Bio-Augments": 1150, "Nano-Bots": 420, "Cyberdeck": 820, "Plasma Rifle": 1450, "Stealth Suit": 920, "Stimpacks": 190 } },
-            { name: "Neon Heights", prices: { "Microchips": 95, "Neural Implants": 520, "Holo-Disguises": 900, "Quantum Drives": 720, "Bio-Augments": 1250, "Nano-Bots": 380, "Cyberdeck": 780, "Plasma Rifle": 1550, "Stealth Suit": 880, "Stimpacks": 210 } }
+            { name: "Neo Tokyo", goods: ["Microchips", "Neural Implants", "Holo-Disguises", "Quantum Drives", "Bio-Augments"] },
+            { name: "Cyber City", goods: ["Nano-Bots", "Cyberdeck", "Plasma Rifle", "Stealth Suit", "Stimpacks"] },
+            { name: "Dystopia", goods: ["Microchips", "Neural Implants", "Holo-Disguises", "Quantum Drives", "Bio-Augments"] },
+            { name: "Synthwave", goods: ["Nano-Bots", "Cyberdeck", "Plasma Rifle", "Stealth Suit", "Stimpacks"] },
+            { name: "Neon Heights", goods: ["Microchips", "Neural Implants", "Holo-Disguises", "Quantum Drives", "Bio-Augments"] },
+            { name: "Blade Runner's Alley", goods: ["Nano-Bots", "Cyberdeck", "Plasma Rifle", "Stealth Suit", "Stimpacks"] },
+            { name: "Hackerspace", goods: ["Microchips", "Neural Implants", "Holo-Disguises", "Quantum Drives", "Bio-Augments"] },
+            { name: "Cybertek Slums", goods: ["Nano-Bots", "Cyberdeck", "Plasma Rifle", "Stealth Suit", "Stimpacks"] },
+            { name: "Neo Shanghai", goods: ["Microchips", "Neural Implants", "Holo-Disguises", "Quantum Drives", "Bio-Augments"] },
+            { name: "Android's Den", goods: ["Nano-Bots", "Cyberdeck", "Plasma Rifle", "Stealth Suit", "Stimpacks"] }
         ];
 
         const events = [
@@ -73,18 +93,49 @@
             { message: "A major corporation has bought out a supplier, prices have increased by 20%.", effect: 1.2 },
             { message: "A city-wide festival is driving up demand, prices have increased by 15%.", effect: 1.15 },
             { message: "A hacker group has disrupted supply chains, prices have increased by 25%.", effect: 1.25 },
-            { message: "The government has subsidized trade, prices have decreased by 5%.", effect: 0.95 }
+            { message: "The government has subsidized trade, prices have decreased by 5%.", effect: 0.95 },
+            { message: "A natural disaster has affected production, prices have increased by 30%.", effect: 1.3 },
+            { message: "A technological breakthrough has made certain goods more accessible, prices have decreased by 15%.", effect: 0.85 },
+            { message: "Political unrest has disrupted trade routes, prices have increased by 18%.", effect: 1.18 },
+            { message: "Rumor has it that Microchips will be scarce in Neo Tokyo.", item: "Microchips", location: "Neo Tokyo", effect: 1.5 },
+            { message: "Rumor has it that Cyberdeck will be abundant in Cyber City.", item: "Cyberdeck", location: "Cyber City", effect: 0.7 },
+            { message: "Rumor has it that Plasma Rifle will be scarce in Synthwave.", item: "Plasma Rifle", location: "Synthwave", effect: 1.6 },
+            { message: "Rumor has it that Neural Implants will be abundant in Neon Heights.", item: "Neural Implants", location: "Neon Heights", effect: 0.6 },
+            { message: "Rumor has it that Stimpacks will be scarce in Blade Runner's Alley.", item: "Stimpacks", location: "Blade Runner's Alley", effect: 1.4 }
         ];
+
+        const itemRarity = {
+            "Microchips": { rarity: 0.6, minPrice: 100, maxPrice: 200 },
+            "Neural Implants": { rarity: 0.4, minPrice: 400, maxPrice: 600 },
+            "Holo-Disguises": { rarity: 0.3, minPrice: 700, maxPrice: 1000 },
+            "Quantum Drives": { rarity: 0.2, minPrice: 1200, maxPrice: 1800 },
+            "Bio-Augments": { rarity: 0.1, minPrice: 2000, maxPrice: 3000 },
+            "Nano-Bots": { rarity: 0.5, minPrice: 200, maxPrice: 400 },
+            "Cyberdeck": { rarity: 0.4, minPrice: 600, maxPrice: 800 },
+            "Plasma Rifle": { rarity: 0.3, minPrice: 1000, maxPrice: 1500 },
+            "Stealth Suit": { rarity: 0.2, minPrice: 1800, maxPrice: 2400 },
+            "Stimpacks": { rarity: 0.1, minPrice: 3000, maxPrice: 4000 }
+        };
 
         let currentLocation = 0;
         let inventory = {};
         let credits = 1000;
         let currentDay = 1;
+        let timeRemaining = 30;
+        let prices = {};
+        let reputation = 0;
+        let cargoCapacity = 100;
+        let negotiationSkills = 0;
+        let shieldStrength = 0;
+        let travelSpeed = 1;
 
         const locationElement = document.getElementById("location");
         const pricesElement = document.getElementById("prices");
         const inventoryElement = document.getElementById("inventory");
         const creditsElement = document.getElementById("credits");
+        const timeRemainingElement = document.getElementById("timeRemaining");
+        const reputationElement = document.getElementById("reputation");
+        const cargoCapacityElement = document.getElementById("cargoCapacity");
         const citySelect = document.getElementById("citySelect");
         const travelButton = document.getElementById("travel");
         const nextDayButton = document.getElementById("nextDay");
@@ -93,61 +144,125 @@
         const buyButton = document.getElementById("buy");
         const sellButton = document.getElementById("sell");
         const eventMessageElement = document.getElementById("eventMessage");
+        const upgradeCapacityButton = document.getElementById("upgradeCapacity");
+        const upgradeNegotiationButton = document.getElementById("upgradeNegotiation");
+        const upgradeStorageButton = document.getElementById("upgradeStorage");
+        const upgradeShieldButton = document.getElementById("upgradeShield");
+        const upgradeSpeedButton = document.getElementById("upgradeSpeed");
 
         function updateDisplay() {
             locationElement.textContent = locations[currentLocation].name;
-            pricesElement.innerHTML = Object.entries(locations[currentLocation].prices)
+            pricesElement.innerHTML = Object.entries(prices)
                 .map(([item, price]) => `<p>${item}: ${price} credits</p>`)
                 .join("");
             inventoryElement.innerHTML = Object.entries(inventory)
                 .map(([item, quantity]) => `<p>${item}: ${quantity}</p>`)
                 .join("");
             creditsElement.textContent = credits;
-            itemSelect.innerHTML = Object.keys(locations[currentLocation].prices)
+            timeRemainingElement.textContent = timeRemaining;
+            reputationElement.textContent = reputation;
+            cargoCapacityElement.textContent = cargoCapacity;
+            itemSelect.innerHTML = locations[currentLocation].goods
                 .map(item => `<option value="${item}">${item}</option>`)
                 .join("");
         }
 
+        function generatePrices() {
+            prices = {};
+            locations[currentLocation].goods.forEach(item => {
+                const { minPrice, maxPrice } = itemRarity[item];
+                const basePrice = Math.floor(Math.random() * (maxPrice - minPrice + 1)) + minPrice;
+                const rarityMultiplier = 1 + (1 - itemRarity[item].rarity);
+                prices[item] = Math.floor(basePrice * rarityMultiplier);
+            });
+        }
+
+        function generateMarketTrends() {
+            locations[currentLocation].goods.forEach(item => {
+                const trendFactor = Math.random() * 0.2 + 0.9; // Random trend factor between 0.9 and 1.1
+                prices[item] = Math.floor(prices[item] * trendFactor);
+                const { minPrice, maxPrice } = itemRarity[item];
+                prices[item] = Math.max(minPrice, Math.min(maxPrice, prices[item]));
+            });
+        }
+
         function travel() {
             const selectedCity = citySelect.value;
-            if (selectedCity) {
+            if (selectedCity === locations[currentLocation].name) {
+                eventMessageElement.textContent = `You're already in ${selectedCity}.`;
+            } else {
                 currentLocation = locations.findIndex(location => location.name === selectedCity);
-                currentDay++;
+                currentDay += travelSpeed;
+                timeRemaining -= travelSpeed;
+                credits -= 100; // Deduct travel cost
                 if (Math.random() < 0.2) {
                     const event = events[Math.floor(Math.random() * events.length)];
                     eventMessageElement.textContent = `Day ${currentDay}: ${event.message}`;
-                    Object.keys(locations[currentLocation].prices).forEach(item => {
-                        locations[currentLocation].prices[item] = Math.round(locations[currentLocation].prices[item] * event.effect);
-                    });
+                    if (event.item && event.location === locations[currentLocation].name) {
+                        if (event.effect > 1) {
+                            prices[event.item] = Math.floor(prices[event.item] * event.effect);
+                        } else {
+                            prices[event.item] = Math.floor(prices[event.item] * event.effect);
+                        }
+                    } else {
+                        Object.keys(prices).forEach(item => {
+                            prices[item] = Math.round(prices[item] * event.effect);
+                        });
+                    }
                 } else {
                     eventMessageElement.textContent = `Day ${currentDay}: No significant events occurred.`;
                 }
+                generatePrices();
+                generateMarketTrends();
                 updateDisplay();
+                checkGameOver();
+                encounterConflict();
             }
         }
 
         function nextDay() {
             currentDay++;
+            timeRemaining--;
             if (Math.random() < 0.2) {
                 const event = events[Math.floor(Math.random() * events.length)];
                 eventMessageElement.textContent = `Day ${currentDay}: ${event.message}`;
-                Object.keys(locations[currentLocation].prices).forEach(item => {
-                    locations[currentLocation].prices[item] = Math.round(locations[currentLocation].prices[item] * event.effect);
-                });
+                if (event.item && event.location === locations[currentLocation].name) {
+                    if (event.effect > 1) {
+                        prices[event.item] = Math.floor(prices[event.item] * event.effect);
+                    } else {
+                        prices[event.item] = Math.floor(prices[event.item] * event.effect);
+                    }
+                } else {
+                    Object.keys(prices).forEach(item => {
+                        prices[item] = Math.round(prices[item] * event.effect);
+                    });
+                }
             } else {
                 eventMessageElement.textContent = `Day ${currentDay}: No significant events occurred.`;
             }
+            generateMarketTrends();
             updateDisplay();
+            checkGameOver();
+            encounterConflict();
         }
 
         function buy() {
             const item = itemSelect.value;
             const quantity = parseInt(quantityInput.value);
             if (item && quantity) {
-                const price = locations[currentLocation].prices[item] * quantity;
+                const availableCapacity = cargoCapacity - Object.values(inventory).reduce((sum, qty) => sum + qty, 0);
+                if (quantity > availableCapacity) {
+                    alert("Insufficient cargo capacity!");
+                    return;
+                }
+
+                const price = prices[item] * quantity;
                 if (price <= credits) {
                     credits -= price;
                     inventory[item] = (inventory[item] || 0) + quantity;
+                    if (itemRarity[item].rarity < 0.3) {
+                        reputation += Math.floor(quantity / 10);
+                    }
                     updateDisplay();
                 } else {
                     alert("Insufficient credits!");
@@ -159,13 +274,96 @@
             const item = itemSelect.value;
             const quantity = parseInt(quantityInput.value);
             if (item && quantity && inventory[item] >= quantity) {
-                const price = locations[currentLocation].prices[item] * quantity;
+                let price = prices[item] * quantity;
+                if (negotiationSkills > 0) {
+                    price = Math.floor(price * (1 + negotiationSkills / 100));
+                }
                 credits += price;
                 inventory[item] -= quantity;
                 if (inventory[item] === 0) {
                     delete inventory[item];
                 }
+                if (itemRarity[item].rarity < 0.3) {
+                    reputation += Math.floor(quantity / 10);
+                }
                 updateDisplay();
+            }
+        }
+
+        function upgradeCapacity() {
+            if (credits >= 1000) {
+                credits -= 1000;
+                cargoCapacity += 10;
+                updateDisplay();
+            } else {
+                alert("Insufficient credits to upgrade cargo capacity!");
+            }
+        }
+
+        function upgradeNegotiation() {
+            if (credits >= 1500) {
+                credits -= 1500;
+                negotiationSkills += 5;
+                updateDisplay();
+            } else {
+                alert("Insufficient credits to upgrade negotiation skills!");
+            }
+        }
+
+        function upgradeStorage() {
+            if (credits >= 2000) {
+                credits -= 2000;
+                cargoCapacity += 20;
+                updateDisplay();
+            } else {
+                alert("Insufficient credits to upgrade storage!");
+            }
+        }
+
+        function upgradeShield() {
+            if (credits >= 2500) {
+                credits -= 2500;
+                shieldStrength += 0.1;
+                updateDisplay();
+            } else {
+                alert("Insufficient credits to upgrade shield!");
+            }
+        }
+
+        function upgradeSpeed() {
+            if (credits >= 3000) {
+                credits -= 3000;
+                travelSpeed++;
+                updateDisplay();
+            } else {
+                alert("Insufficient credits to upgrade travel speed!");
+            }
+        }
+
+        function encounterConflict() {
+            if (Math.random() < 0.1) {
+                const randomEvent = Math.random();
+                if (randomEvent < 0.5) {
+                    if (Math.random() < shieldStrength) {
+                        eventMessageElement.textContent = "You encountered a rival gang, but your shield protected you from theft.";
+                    } else {
+                        const stolenCredits = Math.floor(credits * 0.2);
+                        credits -= stolenCredits;
+                        eventMessageElement.textContent = `You encountered a rival gang and they stole ${stolenCredits} credits from you!`;
+                    }
+                } else {
+                    const bribeAmount = Math.floor(credits * 0.1);
+                    credits -= bribeAmount;
+                    eventMessageElement.textContent = `You encountered law enforcement and had to bribe them with ${bribeAmount} credits.`;
+                }
+                updateDisplay();
+            }
+        }
+
+        function checkGameOver() {
+            if (timeRemaining <= 0) {
+                alert(`Game Over! Your final score is ${credits} credits.`);
+                // Reset the game or perform any other game over actions
             }
         }
 
@@ -175,7 +373,14 @@
         nextDayButton.addEventListener("click", nextDay);
         buyButton.addEventListener("click", buy);
         sellButton.addEventListener("click", sell);
+        upgradeCapacityButton.addEventListener("click", upgradeCapacity);
+        upgradeNegotiationButton.addEventListener("click", upgradeNegotiation);
+        upgradeStorageButton.addEventListener("click", upgradeStorage);
+        upgradeShieldButton.addEventListener("click", upgradeShield);
+        upgradeSpeedButton.addEventListener("click", upgradeSpeed);
 
+        generatePrices();
+        generateMarketTrends();
         updateDisplay();
     </script>
 </body>
